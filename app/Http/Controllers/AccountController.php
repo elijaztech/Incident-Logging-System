@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\Auth;
 
 class AccountController extends Controller
 {
@@ -37,5 +38,21 @@ class AccountController extends Controller
         $user->save();
 
         return back()->with('success', 'Account profile successfully updated!');
+    }
+    public function destroy(Request $request)
+    {
+        $user = auth()->user();
+
+        //logout
+        Auth::logout();
+        
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        //deletefromdb
+        $user->delete();
+
+        //back to login
+        return redirect('/login')->with('success', 'Your account has been successfully deleted.');
     }
 }

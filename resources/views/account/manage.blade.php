@@ -69,12 +69,26 @@
                     </div>
                 </div>
 
+                
+
                 <div class="pt-4 border-t border-gray-100 flex justify-end">
                     <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm px-6 py-3 rounded-lg transition shadow-md">
                         Commit Profile Settings Update
                     </button>
                 </div>
             </form>
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h3 class="text-sm font-bold text-red-600 uppercase tracking-wider mb-2">Account Deletion</h3>
+                <p class="text-xs text-gray-500 mb-4">Once you delete your account, there is no going back. All personal data will be erased.</p>
+                
+                <form action="{{ route('account.destroy') }}" method="POST" onsubmit="return confirm('Are you absolutely sure you want to delete your account? You will be logged out immediately.');">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="bg-red-50 hover:bg-red-600 text-red-700 hover:text-white font-bold text-sm px-4 py-2 rounded-lg transition border border-red-200 hover:border-red-600 shadow-sm">
+                        Delete My Account
+                    </button>
+                </form>
+            </div>
         </div>
     </main>
 @endsection

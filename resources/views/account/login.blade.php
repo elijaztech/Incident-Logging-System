@@ -6,13 +6,13 @@
 @endsection
 
 @section('content')
-    <div class="w-full py-6 md:py-20 px-4 bg-gray-100 min-h-screen">
-        <div class="bg-white w-full max-w-4xl rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
+    <div class="w-full py-12 px-4 bg-gray-100 min-h-screen">
+        <div class="bg-white w-full max-w-4xl mx-auto rounded-2xl shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-2">
             
             
             <div class="bg-blue-700 p-8 text-white flex flex-col justify-between hidden md:flex">
                 <div>
-                    <h1 class="text-3xl font-bold tracking-tight">Incident Logging System</h1>
+                    <h1 class="text-3xl font-bold tracking-tight">Loggers (Incident Logging System)</h1>
                     <p class="text-blue-200 mt-2 text-sm">Logging In Portal</p>
                 </div>
                 <div class="space-y-4">

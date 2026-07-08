@@ -107,54 +107,68 @@ class TicketController extends Controller
     public function update(Request $request, $id)
     {
         $ticket = Incident::findOrFail($id);
-        $user = auth()->user() ?? \App\Models\User::find(0); //default if empty
-        
-        //when unreceived, only user can edit
-        if ($ticket->status === 'unreceived') {
-
-            //validate modification updates are allowed for users
-            $rules = [
-                'location'    => ['required', 'string', 'max:255'],
-                'department'  => ['required', 'string'],
-                'description' => ['required', 'string', 'max:1000'],
-                'compensationtype'    => ['nullable', 'string', 'max:255'],
-                'compensationdetails'  => ['nullable', 'string','max:1000'],
-                'compensationvalue' => ['nullable', 'numeric', 'max:1000'],
-                'rating' => ['nullable', 'numeric', 'max:10'],
-                'ratingdetails' => ['nullable', 'string', 'max:1000'],
-            ];
-
-            if ($request->hasFile('ticket_image')) {
-                $rules['ticket_image'] = ['image', 'mimes:jpeg,png,jpg', 'max:2048'];
-            }
-
-            $validated = $request->validate($rules);
-
-            if ($request->hasFile('ticket_image')) {
-                $validated['image_path'] = $request->file('ticket_image')->store('tickets', 'public');
-            }
-
-            $ticket->update($validated);
-                return redirect()->route('tickets.index')->with('success', 'Ticket log details updated successfully.');
-            }
-
-        //if ticket is received, restrict edit access to managers and rectifiers
-        //Allowed roles: 'manager', 'rectifier' ('role' column in users table)
+        $user = auth()->user();
         $authorizedRoles = ['manager', 'rectifier', 'admin'];
-        if((($ticket->status === 'unreceived') && (auth()->user()->id !== $ticket->user_id)) || (($ticket->status !== 'unreceived') && (!in_array(auth()->user()->role, $authorizedRoles)))) {
-            return back()->withErrors(['state' => 'Access Denied. This ticket is processing and can only be edited by managers or rectifiers.']);
+
+        //status
+        if ($request->has('status') && !$request->has('description') && !$request->has('location')) {
+            
+            
+            if (!in_array($user->role, $authorizedRoles)) {
+                return back()->withErrors(['state' => 'Access Denied. Only managers, admins, or rectifiers can modify status tracking states.']);
+            }
+
+            $validated = $request->validate([
+                'status' => ['required', 'string'],
+            ]);
+
+            $ticket->update([
+                'status' => $validated['status']
+            ]);
+
+            return redirect()->route('tickets.index')->with('success', 'Ticket status committed successfully.');
+        } 
+
+        //details
+        
+        if ($ticket->status === 'unreceived') {
+            // unreceived tickets can only be modified by the creator or an admin
+            if ($user->id !== $ticket->user_id && $user->role !== 'admin') {
+                return back()->withErrors(['state' => 'Access Denied. You cannot edit someone else\'s unreceived logs.']);
+            }
+        } else {
+            //active tickets can only be modified by staff roles
+            if (!in_array($user->role, $authorizedRoles)) {
+                return back()->withErrors(['state' => 'Access Denied. Active tickets can only be adjusted by authorized personnel.']);
+            }
         }
 
-        //validate manager/rectifier status changes
-        $validated = $request->validate([
-            'status' => ['required', 'string'],
-        ]);
+        //validation
+        $rules = [
+            'location'            => ['required', 'string', 'max:255'],
+            'department'          => ['required', 'string'],
+            'description'         => ['required', 'string', 'max:1000'],
+            'compensationtype'    => ['nullable', 'string', 'max:255'],
+            'compensationdetails' => ['nullable', 'string', 'max:1000'],
+            'compensationvalue'   => ['nullable', 'numeric', 'max:1000'],
+            'compensationapproval'=> ['nullable', 'string', 'max:10'], // Added from your form fields
+            'rating'              => ['nullable', 'numeric', 'max:10'],
+            'ratingdetails'       => ['nullable', 'string', 'max:1000'],
+        ];
 
-        $ticket->update([
-            'status' => $validated['status']
-        ]);
+        if ($request->hasFile('ticket_image')) {
+            $rules['ticket_image'] = ['image', 'mimes:jpeg,png,jpg', 'max:2048'];
+        }
 
-        return redirect()->route('tickets.index')->with('success', 'Ticket status committed successfully.');
+        $validated = $request->validate($rules);
+
+        if ($request->hasFile('ticket_image')) {
+            $validated['image_path'] = $request->file('ticket_image')->store('tickets', 'public');
+        }
+
+        $ticket->update($validated);
+
+        return redirect()->route('tickets.index')->with('success', 'Ticket log details updated successfully.');
     }
 
     public function updateStatus(Request $request, $id)
@@ -170,7 +184,7 @@ class TicketController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => ['required', 'string', 'in:unreceived,received,denied,inprogress,resolved,onhold'],
+            'status' => ['nullable', 'string', 'in:unreceived,received,denied,inprogress,resolved,onhold'],
         ]);
 
         if ($validated['status'] === 'resolved') {
@@ -226,5 +240,18 @@ class TicketController extends Controller
         ]);
 
         return redirect()->route('tickets.index')->with('success', 'Ticket status committed successfully.');
+    }
+    public function destroy($id)
+    {
+        $ticket = Incident::findOrFail($id);
+        
+        // only admin/maanger or ticket owner can delete
+        if (!in_array(auth()->user()->role, ['manager','admin']) && auth()->user()->id !== $ticket->user_id) {
+            return back()->withErrors(['state' => 'Unauthorized action.']);
+        }
+
+        $ticket->delete();
+
+        return redirect()->route('tickets.index')->with('success', 'Ticket deleted successfully.');
     }
 }

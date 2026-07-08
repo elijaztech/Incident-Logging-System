@@ -79,6 +79,16 @@
                                 <td class="px-2 py-4 whitespace-nowrap">
                                     <div class="flex gap-2">
                                         <a href="{{ route('tickets.manage', $ticket->ticketid) }}" class="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">Manage Status</a>
+
+                                        @if(in_array(auth()->user()->role, ['manager','admin']) || auth()->user()->id === $ticket->user_id)
+                                            <form action="{{ route('tickets.destroy', $ticket->ticketid) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this ticket? This action cannot be undone.');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-3 py-2 rounded transition shadow-sm">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

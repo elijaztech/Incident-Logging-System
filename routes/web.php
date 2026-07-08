@@ -47,6 +47,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/tickets/{id}/manage', [TicketController::class, 'manage'])->name('tickets.manage');
     Route::post('/tickets/{id}/update', [TicketController::class, 'update'])->name('tickets.update');
     Route::post('/tickets/{id}/updaterating', [TicketController::class, 'updaterating'])->name('tickets.updaterating');
+    //ticket delete
+    Route::delete('/tickets/{id}', [TicketController::class, 'destroy'])->name('tickets.destroy');
     //management analytics dashboard
     Route::get('/manager/mad', [TicketController::class, 'showMAD'])->name('mad');
 });
@@ -73,3 +75,6 @@ Route::get('/manager/printticket/{id}', function($id) {
 
     return view('manager.printticket', compact('incident'));
 })->middleware(['auth'])->name('manager.printticket');
+
+//account deletion test
+Route::delete('/account/destroy', [AccountController::class, 'destroy'])->name('account.destroy');
